@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Multi-SA",
+    "description": "Multi-project Superagent: runs several projects at once, each bound to its own GitHub repository and optional Feishu bot, turning authorized requests into Tickets executed in their own DSH Sessions."
+  }
+}

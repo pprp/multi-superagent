@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Multi-SA",
+    "description": "多项目版 Superagent：同时管理多个项目，每个项目绑定自己的 GitHub 仓库与可选飞书机器人，把获授权的请求转为 Ticket 并在各自的 DSH 会话中执行。"
+  }
+}
