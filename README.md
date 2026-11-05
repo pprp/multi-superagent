@@ -2,9 +2,9 @@
 
 [中文](README.md) · [English](README.en.md)
 
-> **仅供研究参考的原型，非 DeepSeek 官方产品。** 代码来自团队日常开发，大量工程由 coding agent 完成。请当作研究代码，不要当成生产级软件；可能仍有缺陷，风格与工程实践也不统一。接入自己的环境前请先审阅并改写。
+> **仅供研究参考的原型，非 DeepSeek 官方产品。** 本仓库是在官方公开的 [dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype)（单仓 Superagent）之上做的**二次开发 / 衍生实现**，用于多项目隔离并行；与官方仓库无隶属或背书关系。代码来自团队日常开发，大量工程由 coding agent 完成。请当作研究代码，不要当成生产级软件；可能仍有缺陷，风格与工程实践也不统一。接入自己的环境前请先审阅并改写。
 >
-> 为公开做了适配，与内部版本及文章 *Exploring Super-agent Design: Towards a More Autonomous Agent System* 中的实现并不完全一致。文中部分设计属于后续方向，本原型尚未实现。
+> 为公开做了适配，与内部版本及文章 *Exploring Super-agent Design: Towards a More Autonomous Agent System* 中的实现并不完全一致。文中部分设计属于后续方向，本原型尚未实现。上游单仓能力与缺陷请以官方仓库为准；本仓新增的多项目编排与隔离语义由本项目自行维护。
 
 ## 为什么做 Multi-SA
 

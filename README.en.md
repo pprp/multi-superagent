@@ -2,9 +2,9 @@
 
 [中文](README.md) · [English](README.en.md)
 
-> **Research prototype for reference only, not an official DeepSeek product.** This code grew out of our team's day-to-day development work, with much of the engineering done by coding agents. Treat it as research code, not production-ready software. It may still contain bugs, and its coding style and engineering practices may be inconsistent. Review and adapt it before using it in your own environment.
+> **Research prototype for reference only, not an official DeepSeek product.** This repository is a **derivative / secondary development** of the public [dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) (single-repo Superagent), extended for multi-project isolated parallel work. It is not affiliated with or endorsed by DeepSeek. The code grew out of our team's day-to-day development work, with much of the engineering done by coding agents. Treat it as research code, not production-ready software. It may still contain bugs, and its coding style and engineering practices may be inconsistent. Review and adapt it before using it in your own environment.
 >
-> We have adapted it for publication, so it is not identical to our internal version or the implementation described in *Exploring Super-agent Design: Towards a More Autonomous Agent System*. Some designs discussed in the article are directions for future development and are not implemented in this prototype.
+> We have adapted it for publication, so it is not identical to our internal version or the implementation described in *Exploring Super-agent Design: Towards a More Autonomous Agent System*. Some designs discussed in the article are directions for future development and are not implemented in this prototype. Treat the upstream repo as the source of truth for single-repo Superagent behavior; multi-project orchestration and isolation semantics here are maintained by this project.
 
 ## Why Multi-SA
 
