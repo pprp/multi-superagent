@@ -6,21 +6,32 @@
 >
 > 为公开做了适配，与内部版本及文章 *Exploring Super-agent Design: Towards a More Autonomous Agent System* 中的实现并不完全一致。文中部分设计属于后续方向，本原型尚未实现。
 
-**Multi-SA** 是挂在 [DeepSeek Harness](https://www.deepseek.com/en/harness/) 上的**多项目** Superagent 插件（包名 `dsh-multi-superagent`）。一个进程里管多个项目：每个项目对应自己的 GitHub 仓库（可选飞书），各自做鉴权、开 Ticket、在独立 Session 与工作目录里干活，并回到原对话回复（例如开 PR）。Web 面板按项目展示进度与待人工事项。
+## 为什么做 Multi-SA
 
-它也是一种用法：**尽量少占人的注意力，尽量多交付有用结果。** 能替整队行动的 agent，也可能浪费整队注意力——因此只在有人点名、或团队写好的规则允许时行动；只在必须有人出手、或结果值得看时说话。原则见 [docs/000-philosophy.md](docs/000-philosophy.md)。
+官方 / 单仓 [dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) 面向**一个** GitHub 仓库：一套 Sources、一套 Policy、一套执行上下文。实际工作里往往要同时推多个仓库（论文仓、产品仓、实验仓……）；若为每个仓各起一整套 Superagent，运维成本高，也容易串配置。
 
-## 和单仓 dsh-superagent 的区别
+**Multi-SA**（包名 `dsh-multi-superagent`）在同一套 [DeepSeek Harness](https://www.deepseek.com/en/harness/) 进程里托管**多个项目**，并保证彼此隔离、可并行：
 
-| | 单仓 `dsh-superagent` | Multi-SA（本仓） |
+- **一项目一仓库**：各自的 GitHub（可选飞书）、允许名单与规则
+- **一项目一状态**：`~/.dsh/state/multi-sa/projects/<id>/`，面板与 API 按项目隔离
+- **一 Ticket 一 Session / 工作目录**：并发执行时不共用 checkout，不串会话
+- **统一运维入口**：一个独立 profile `multi-sa`、一口 `3084`、一套 `scripts/dsh-superagent` 管控启停与健康检查
+
+它仍遵循 Superagent 的用法：**尽量少占人的注意力，尽量多交付有用结果。** 只在有人点名、或团队写好的规则允许时行动；只在必须有人出手、或结果值得看时说话。原则见 [docs/000-philosophy.md](docs/000-philosophy.md)。
+
+## 和官方单仓 Superagent 比什么
+
+| | 官方 / 单仓 `dsh-superagent` | Multi-SA（本仓） |
 |---|---|---|
-| 范围 | 一个 GitHub 仓库 | 多个项目，每项目一个仓库 |
-| DSH profile | `superagent` | **`multi-sa`（独立）** |
-| 面板口 | `127.0.0.1:3082` | `127.0.0.1:3084` |
+| 同时服务的仓库 | **1 个** | **多个**，可并行 |
+| 配置与鉴权 | 全局一套 | **按项目隔离**（Sources / Policy / Execution） |
+| Ticket 执行 | 单仓 Session / 工作树 | **每 Ticket 独立 Session 与工作目录** |
+| 面板 | 单仓视图 | **按项目切换**，待办互不混排 |
+| DSH profile | `superagent`（常见口 `3082`） | **独立** `multi-sa`（`127.0.0.1:3084`） |
 | 状态目录 | `~/.dsh/state/superagent` | `~/.dsh/state/multi-sa` |
-| 控制脚本 | 单仓里的 `scripts/dsh-superagent` | 本仓 `scripts/dsh-superagent`（默认口 3084） |
+| 控制脚本 | 单仓仓内脚本 | 本仓 `scripts/dsh-superagent`（默认口 3084） |
 
-**不要**把两个包装进同一个 profile：各自改进程级 `PATH` / git 设置，需要独立重启。详情见 [docs/006-deployment.md](docs/006-deployment.md) 的「独立 profile 部署」。
+**不要**把 `dsh-superagent` 与 `dsh-multi-superagent` 装进同一个 profile：两者都会改进程级 `PATH` / git 设置，需要独立重启。部署细节见 [docs/006-deployment.md](docs/006-deployment.md) 的「独立 profile 部署」。
 
 ## 快速开始
 
@@ -37,7 +48,7 @@ scripts/dsh-superagent start
 scripts/dsh-superagent status
 ```
 
-面板链接在最新启动日志里的 `dsh web: http://127.0.0.1:3084/?token=…`。
+面板链接在最新启动日志里的 `dsh web: http://127.0.0.1:3084/?token=…`。在面板里为每个仓库新建项目，再分别配 Sources / Policy / Execution。
 
 一步一步装（含账号、Sources、Policy）：让 coding agent 读 [SETUP.md](SETUP.md)，按里面的问答与你一起做。
 
@@ -60,6 +71,8 @@ scripts/dsh-superagent status
 ```sh
 pnpm check   # 类型检查 + 测试 + 构建
 ```
+
+推送 `v*` tag 会触发 GitHub Actions：跑 `pnpm check`、打包 `.tgz` 并创建 [Release](https://github.com/pprp/multi-superagent/releases)。
 
 ## 许可
 
