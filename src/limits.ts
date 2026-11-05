@@ -9,3 +9,5 @@ export const LIMITS = {
   admissionContextMaxPages: { min: 1, max: 100 },
   admissionContextTimeoutMs: { min: 1, max: 90_000 },
 } as const
+/** GitHub `owner/name`, or empty; a `.` or `..` segment is refused so the value can never act as a relative path. */
+export const REPOSITORY = /^((?!\.\.?\/)[A-Za-z0-9_.-]+\/(?!\.\.?$)[A-Za-z0-9_.-]+)?$/

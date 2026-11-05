@@ -1,5 +1,5 @@
 /** Plugin configuration and startup verification for repository access and agent CLI identities. */
-import { LIMITS } from './limits.ts'
+import { LIMITS, REPOSITORY } from './limits.ts'
 import { accessSync, constants, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { delimiter, isAbsolute, join } from 'node:path'
@@ -57,7 +57,7 @@ export function machineOf(config: DeploymentConfig): Machine {
 }
 
 export const GithubAccountsSchema = z.object({
-  repository: z.string().trim().regex(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)?$/, 'owner/name').default(''),
+  repository: z.string().trim().regex(REPOSITORY, 'owner/name').default(''),
   cli: z.string().trim().default(''),
 })
 export const FeishuBotSchema = z.object({ cli: z.string().trim().default('') })

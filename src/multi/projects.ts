@@ -13,19 +13,21 @@ import type {} from '@deepseek-ai/dsh-host-webserver'
 import { z } from 'zod'
 import { Runtime } from '../app/runtime.ts'
 import { Store } from '../app/store.ts'
-import { json, readBody, sameOrigin } from '../app/http.ts'
+import { RouteError, json, readBody, rejectManagement } from '../app/http.ts'
 import type { Machine, ProjectBinding } from '../deployment.ts'
 import * as github from '../sources/github.ts'
 import * as feishu from '../sources/feishu.ts'
 import { Hub } from './hub.ts'
 import { ticketStage } from '../core/index.ts'
 
+import { REPOSITORY } from '../limits.ts'
+
 export const ProjectSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/),
   name: z.string().trim().min(1).max(80),
   description: z.string().max(400).default(''),
   /** GitHub repository `owner/name`, seeded into the project's GitHub Source on creation. */
-  repository: z.string().trim().regex(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)?$/).default(''),
+  repository: z.string().trim().regex(REPOSITORY).default(''),
   feishu: z.boolean().default(false),
   enabled: z.boolean().default(true),
   createdAt: z.string(),
@@ -38,7 +40,7 @@ const CreateRequest = z.object({
   name: z.string().trim().min(1).max(80),
   id: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,39}$/).optional(),
   description: z.string().max(400).optional(),
-  repository: z.string().trim().regex(/^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)?$/, 'owner/name').optional(),
+  repository: z.string().trim().regex(REPOSITORY, 'owner/name').optional(),
   githubCli: z.string().trim().max(400).optional(),
   feishu: z.boolean().optional(),
   feishuCli: z.string().trim().max(400).optional(),
@@ -178,7 +180,7 @@ export class ProjectManager {
     const scope = this.ctx.isolate('orchestrator')
     const plugin = {
       name: `multi-sa:${project.id}`,
-      inject: ['agents', 'sessionController', 'sessionPersistence', 'workspaceRegistry', 'permissionPresets', 'tools', 'systemPrompt', 'skills', 'webServer', 'llm', 'subprocess'],
+      inject: ['agents', 'sessionController', 'sessionPersistence', 'workspaceRegistry', 'permissionPresets', 'tools', 'systemPrompt', 'skills', 'webServer', 'connection', 'llm', 'subprocess'],
       async apply(ctx: Context) {
         const restart = (): void => {
           void manager.restart(project.id).catch((error: unknown) => { ctx.logger.error('Multi-SA project %s restart failed: %s', project.id, String(error)) })
@@ -220,7 +222,7 @@ export class ProjectError extends Error { constructor(readonly status: number, m
 export function registerProjectsHttp(ctx: Context, manager: ProjectManager): () => void {
   return ctx.webServer.register({ kind: 'prefix', path: '/multi-sa/api', handler: async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://localhost')
-    if (!sameOrigin(req, ctx.webServer.port)) { json(res, 403, { error: 'Same-origin management request required' }); return }
+    if (rejectManagement(ctx, req, res)) return
     const parts = url.pathname.slice('/multi-sa/api/'.length).split('/').filter(Boolean).map(decodeURIComponent)
     const method = req.method ?? 'GET'
     try {
@@ -235,6 +237,7 @@ export function registerProjectsHttp(ctx: Context, manager: ProjectManager): () 
     } catch (error) {
       if (error instanceof z.ZodError) { json(res, 400, { error: error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ') }); return }
       if (error instanceof ProjectError) { json(res, error.status, { error: error.message }); return }
+      if (error instanceof RouteError) { json(res, error.status, { error: error.message }); return }
       json(res, 500, { error: error instanceof Error ? error.message : String(error) })
     }
   } })

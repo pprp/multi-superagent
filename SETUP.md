@@ -53,6 +53,7 @@ Ask in this order, one per message, following the flow of work in [docs/001-doma
 Do not ask about values with a good default; list them in the plan instead:
 
 - profile `superagent`, a copy of DSH's Web profile kept apart from the profile the operator works in, so it restarts without closing their Sessions; port `3082`; state directory `<home>/.dsh/state/superagent` as an absolute path;
+- for Multi-SA (`dsh-multi-superagent`): its own profile `multi-sa`, port `3084`, state directory `<home>/.dsh/state/multi-sa`, never in the same profile as `dsh-superagent` (see "独立 profile 部署" in `docs/006-deployment.md`);
 - an hourly check from the operator's own profile, which repairs dsh-superagent when it is not running;
 - branch prefix `agent/`;
 - accept mode `observe`, which records proactive work without doing it, and the default rules and prompt sections;

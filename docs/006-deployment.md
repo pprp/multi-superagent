@@ -70,6 +70,35 @@ Both presets run with `danger-full-access` as the operator's OS user and read me
 
 ## Install
 
+### 独立 profile 部署（Multi-SA）
+
+Multi-SA（`dsh-multi-superagent`）以独立 DSH profile 运行，与单仓 `dsh-superagent` 并存、互不加载：
+
+| | 单仓 dsh-superagent | Multi-SA |
+|---|---|---|
+| profile | `superagent` | `multi-sa` |
+| 端口 | `127.0.0.1:3082` | `127.0.0.1:3084` |
+| bundles | base、web-app、`dsh-superagent` | base、web-app、`dsh-multi-superagent` |
+| stateDir | `~/.dsh/state/superagent` | `~/.dsh/state/multi-sa`（`projects.json` 与 `projects/<id>`） |
+| 控制脚本 | dsh-superagent 仓的 `scripts/dsh-superagent --profile superagent` | 本仓 `scripts/dsh-superagent`（默认 `--profile multi-sa --url http://127.0.0.1:3084`） |
+
+不要把两个包装进同一个 profile：两者各自管理进程级 `PATH`/git 设置和重启。新建 `multi-sa` profile（仅首次）：
+
+```sh
+dsh multi-sa --from-default-profile web --dump-config > /dev/null
+dsh plugin --profile multi-sa add "link:$PWD"
+```
+
+然后在 `~/.dsh/profiles/multi-sa/cordis.patch.yml` 写 `webserver`（`127.0.0.1`、`3084`）、`dsh-multi-superagent.config.stateDir`（绝对路径），以及与常用 profile 相同的模型 provider（`llm-pi-ai`、`agent-default-model`）。不要加 `dsh-superagent` / `dsh-superagent-feishu` 条目；各项目的 Feishu 在项目设置里开启。
+
+```sh
+scripts/dsh-superagent start    # tmux 会话 dsh-multi-sa，日志 .artifacts/multi-sa-multi-sa-*.log
+scripts/dsh-superagent status   # 汇总每个启用项目的 /multi-sa/p/<id>/api/state，退出码同下文
+scripts/dsh-superagent stop
+```
+
+Multi-SA 的管理 API 需要 dsh web 登录态和 `x-multi-sa-request: 1` 头；脚本用最新启动日志里 `dsh web: …?token=…` 的 launch token 换取 cookie。由脚本以外的方式启动时没有该日志，`status` 会报不可达（exit 1）。也可用 `MULTI_SA_PROFILE` / `MULTI_SA_URL` 覆盖默认值。
+
 Run this block once, on a machine that has no `superagent` profile yet:
 
 ```sh

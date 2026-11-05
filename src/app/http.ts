@@ -58,7 +58,7 @@ export interface HttpHost {
  * Represents a client-facing 400 or 404 error raised during management route parsing or lookup.
  * Route handlers throw it when request bodies are malformed or target records are missing, and registerHttp serializes its status and message in the HTTP response.
  */
-class RouteError extends Error { constructor(readonly status: 400 | 404, message: string) { super(message) } }
+export class RouteError extends Error { constructor(readonly status: 400 | 404, message: string) { super(message) } }
 export async function readBody(req: IncomingMessage, maxBytes = 128 * 1024): Promise<unknown> {
   let size = 0; const chunks: Buffer[] = []
   for await (const chunk of req) {
@@ -76,6 +76,22 @@ export function sameOrigin(req: Pick<IncomingMessage, 'headers'>, port: number):
   const host = req.headers.host
   if (host !== `127.0.0.1:${port}` && host !== `localhost:${port}`) return false
   return req.headers['x-multi-sa-request'] === '1' && (req.headers.origin === undefined || req.headers.origin === `http://${host}`)
+}
+/** The dsh connection service's request fence (Host/Origin trust plus the signed browser or API credential). */
+interface ConnectionFence { requestRejection(request: Pick<IncomingMessage, 'headers'>): 401 | 403 | 409 | undefined }
+/**
+ * Rejects a management request that is not same-origin or not authenticated to this dsh web session, answering it with
+ * 403 or 401. Routes registered on `webServer` bypass dsh's own authentication, so every management route must call this.
+ * Without a connection service the request is refused: management is never served unauthenticated.
+ * @returns true when the request was rejected and the response already written.
+ */
+export function rejectManagement(ctx: Context, req: IncomingMessage, res: ServerResponse): boolean {
+  if (!sameOrigin(req, ctx.webServer.port)) { json(res, 403, { error: 'Same-origin management request required' }); return true }
+  const connection = Reflect.get(ctx, 'connection') as ConnectionFence | null | undefined
+  const rejection = connection ? connection.requestRejection(req) : 401
+  if (rejection === undefined) return false
+  json(res, rejection, { error: rejection === 401 ? 'dsh web authentication required' : 'Management request refused' })
+  return true
 }
 /** Maps errors to HTTP status codes and structured payloads that the panel localizes in the interface language. */
 function failure(error: unknown): [number, Record<string, unknown>] {
@@ -235,7 +251,7 @@ export function registerHttp(ctx: Context, runtime: HttpHost): () => void {
     ctx.webServer.register({ kind: 'prefix', path: base, handler: async (req, res) => {
       const url = new URL(req.url ?? '/', 'http://localhost')
       if (!url.pathname.startsWith(`${base}/api/`)) { res.writeHead(404); res.end(); return }
-      if (!sameOrigin(req, ctx.webServer.port)) { json(res, 403, { error: 'Same-origin management request required' }); return }
+      if (rejectManagement(ctx, req, res)) return
       try {
         await runtime.ready
         const route = match(table, req.method ?? 'GET', url.pathname.slice(`${base}/api/`.length).split('/'))

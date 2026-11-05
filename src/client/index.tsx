@@ -1,5 +1,5 @@
 /** Browser plugin entry point registering the sidebar icon, main management panel, and Plugin Manager config view. */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Context } from '@deepseek-ai/cordis'
 import type { MainPanelId } from '@deepseek-ai/dsh-client-ui-layout/client'
 import type { SidebarPanelIconOwnerProps } from '@deepseek-ai/dsh-client-ui-sidebar/client'
@@ -12,7 +12,7 @@ import type { ISessions } from '@deepseek-ai/dsh-api-session-controller/client'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import { openKnownSession, SessionNavigationError } from '../navigation.ts'
 import { App } from './app.tsx'
-import { ProjectBar, ProjectsHome } from './projects.tsx'
+import { ProjectBar, ProjectsHome, projectGate, useProjects } from './projects.tsx'
 import { routeScope } from './route.ts'
 import { PluginConfig, usePageForm } from './deployment.tsx'
 import { en, zh } from './locales.ts'
@@ -47,14 +47,40 @@ function Mounted({ ctx, t }: { ctx: ClientContext; t: T }) {
   }, [ctx, t])
   const form = usePageForm(ctx.get('configForms')?.get<Record<string, unknown>>(ENTRY))
   const [project, setProject] = useState<string | undefined>(stored)
+  const [notice, setNotice] = useState<string>()
+  const projects = useProjects()
+  // The list may predate the selection (a project just created, or a stale id restored from sessionStorage),
+  // so the gate only trusts a list fetched after the current project was selected.
+  const [fresh, setFresh] = useState<string>()
+  const { reload } = projects
+  useEffect(() => {
+    if (!project) return
+    let live = true
+    void reload().then(() => { if (live) setFresh(project) })
+    return () => { live = false }
+  }, [project, reload])
   const select = useCallback((id: string | undefined) => {
     try { if (id) sessionStorage.setItem(PROJECT_KEY, id); else sessionStorage.removeItem(PROJECT_KEY) } catch { /* Storage may be unavailable. */ }
-    setProject(id)
+    setNotice(undefined); setProject(id)
   }, [])
-  if (!project) return <ProjectsHome t={t} onOpen={select} />
+  const gate = project && fresh === project && !projects.error ? projectGate(projects.data, project) : 'unknown'
+  useEffect(() => {
+    if (project && gate === 'missing') { select(undefined); setNotice(t('msa.projectGone', { id: project })) }
+  }, [project, gate, select, t])
+  if (!project || gate === 'missing') return <ProjectsHome t={t} onOpen={select} notice={notice} />
+  const bar = <ProjectBar t={t} current={project} onSelect={select} />
+  if (gate === 'stopped') return <ProjectStopped t={t} bar={bar} />
   routeScope(project)
   return <App key={project} t={t} openSession={openSession} deploymentForm={form} base={`/multi-sa/p/${encodeURIComponent(project)}/api/`}
-    projectBar={<ProjectBar t={t} current={project} onSelect={select} />} />
+    projectBar={bar} />
+}
+
+/** Shown instead of the project panel while the project is disabled, so its unmounted routes are not reported as an unresponsive host. */
+function ProjectStopped({ t, bar }: { t: T; bar: ReactNode }) {
+  return <div className="dt-page"><div className="dt-column">
+    <header className="dt-head"><div className="dt-head-title"><h1 className="dt-title">{t('title')}</h1></div><div className="dt-toolbar">{bar}</div></header>
+    <p className="dt-hint" role="status">{t('msa.projectStopped')}</p>
+  </div></div>
 }
 
 export const inject = ['slots', 'locale', 'sessions', 'uiWorkspace']

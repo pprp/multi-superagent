@@ -1,6 +1,7 @@
 /** Multi-SA first page: the project list with creation, enabling, restarting and removal, and the header project switcher. */
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Button, Dot, Icon, Input, Modal, type DotState } from './controls.tsx'
+import { REPOSITORY } from '../limits.ts'
 import STYLES from './client.css?raw'
 import type { T } from './text.ts'
 
@@ -36,6 +37,13 @@ export function useProjects() {
 
 const DOT: Record<ProjectView['status'], DotState> = { ready: 'done', setup: 'warning', starting: 'ongoing', stopped: 'idle', error: 'error' }
 
+/** Whether a selected project can show its panel: `missing` once a fresh list lacks it, `stopped` while it is disabled (its routes are unmounted). */
+export function projectGate(data: ProjectsView | undefined, id: string): 'unknown' | 'missing' | 'stopped' | 'open' {
+  if (!data) return 'unknown'
+  const project = data.projects.find(item => item.id === id)
+  return !project ? 'missing' : !project.enabled ? 'stopped' : 'open'
+}
+
 function CreateProject({ t, open, onClose, onCreated }: { t: T; open: boolean; onClose: () => void; onCreated: (project: ProjectView) => void }) {
   const empty = { name: '', id: '', repository: '', githubCli: '', feishu: false, feishuCli: '', description: '' }
   const [form, setForm] = useState(empty)
@@ -49,6 +57,7 @@ function CreateProject({ t, open, onClose, onCreated }: { t: T; open: boolean; o
   </label>
   const submit = async (event?: FormEvent) => {
     event?.preventDefault()
+    if (!REPOSITORY.test(form.repository.trim())) { setError(t('msa.repositoryInvalid')); return }
     setBusy(true); setError('')
     try {
       const body = Object.fromEntries(Object.entries(form).filter(([, value]) => value !== ''))
@@ -124,7 +133,7 @@ function ProjectCard({ t, project, onOpen, onChanged }: { t: T; project: Project
 }
 
 /** The first page of Multi-SA: every project with its status, and a form to add one. */
-export function ProjectsHome({ t, onOpen }: { t: T; onOpen: (id: string) => void }) {
+export function ProjectsHome({ t, onOpen, notice }: { t: T; onOpen: (id: string) => void; notice?: string }) {
   const { data, error, reload } = useProjects()
   const [creating, setCreating] = useState(false)
   return <div className="dt-page">
@@ -137,6 +146,7 @@ export function ProjectsHome({ t, onOpen }: { t: T; onOpen: (id: string) => void
         </div>
       </header>
       <p className="dt-hint">{t('msa.homeIntro')}</p>
+      {notice && <p className="dt-hint" role="status">{notice}</p>}
       {error && <p className="dt-error" role="alert">{error.message}</p>}
       <section className="dt-section">
         <h2 className="dt-section-title">{t('msa.projects')}{data && <span className="dt-count"> {data.projects.length}</span>}</h2>
@@ -153,12 +163,13 @@ export function ProjectsHome({ t, onOpen }: { t: T; onOpen: (id: string) => void
 /** Header switcher inside a project: back to every project, or jump to another one. */
 export function ProjectBar({ t, current, onSelect }: { t: T; current: string; onSelect: (id: string | undefined) => void }) {
   const { data } = useProjects()
+  const known = data?.projects.some(project => project.id === current) ?? false
   return <span className="msa-bar">
     <Button variant="ghost" size="sm" icon={<Icon name="queue" size={14} />} onClick={() => onSelect(undefined)}>{t('msa.allProjects')}</Button>
     <select className="msa-select" aria-label={t('msa.switch')} value={current} onChange={event => onSelect(event.target.value)}>
       {(data?.projects ?? []).filter(project => project.enabled || project.id === current).map(project =>
         <option key={project.id} value={project.id}>{project.name}{project.repository ? ` (${project.repository})` : ''}</option>)}
-      {!data && <option value={current}>{current}</option>}
+      {!known && <option value={current}>{data ? t('msa.missingOption', { id: current }) : current}</option>}
     </select>
   </span>
 }
