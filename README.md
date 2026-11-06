@@ -41,6 +41,33 @@
 
 **不要**把 `dsh-superagent` 与 `dsh-multi-superagent` 装进同一个 profile：两者都会改进程级 `PATH` / git 设置，需要独立重启。部署细节见 [docs/006-deployment.md](docs/006-deployment.md) 的「独立 profile 部署」。
 
+## 面板一览
+
+下面是本地面板（`127.0.0.1:3084`）的截图。项目名、仓库、账号、路径和 Issue / PR 内容已打码；彩色编号框标出重点。
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/01-projects.png"><img src="docs/assets/panel/01-projects.png" alt="项目列表"></a>
+      <p><b>① 项目列表</b>：一个 DSH 进程托管多个项目。每个项目有独立的计数、Agent 账号和状态目录，可单独进入、重启、停用或移除。</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/02-overview.png"><img src="docs/assets/panel/02-overview.png" alt="项目概览"></a>
+      <p><b>② 项目概览</b>：标签按处理顺序排列：来源 → 触发 → 评估 → 执行。待人确认的 Ticket 可就地处理；24 小时漏斗显示到达、评估、接受的数量，以及执行器并发。</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/03-evaluate.png"><img src="docs/assets/panel/03-evaluate.png" alt="评估"></a>
+      <p><b>③ 评估</b>：每条触发只得到一个决定，原因可追溯（例如「名单内的人明确请求，主 Session 接受」）。处理规则在 Policy 中配置。</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/04-execute.png"><img src="docs/assets/panel/04-execute.png" alt="执行"></a>
+      <p><b>④ 执行</b>：每个 Ticket 有独立的 Session 与工作目录。可查看执行器状态、按生命周期筛选，并看到 Ticket 的阶段（如 CI 后等待新触发再唤醒）和人工介入点。</p>
+    </td>
+  </tr>
+</table>
+
 ## 快速开始
 
 本地已有 DSH、模型与本仓检出时：

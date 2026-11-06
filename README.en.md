@@ -41,6 +41,33 @@ It keeps the Superagent working style: **take as little human attention as possi
 
 **Do not** load `dsh-superagent` and `dsh-multi-superagent` in the same profile: each changes process-wide `PATH` / git settings and needs its own restarts. See the independent-profile section in [docs/006-deployment.md](docs/006-deployment.md).
 
+## Panel tour
+
+Screenshots of the local panel (`127.0.0.1:3084`). Project names, repositories, accounts, paths, and Issue / PR text are pixelated. Numbered color boxes mark the key parts (labels are in Chinese).
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/01-projects.png"><img src="docs/assets/panel/01-projects.png" alt="Project list"></a>
+      <p><b>① Projects</b>: one DSH process hosts many projects. Each project has its own counters, agent account, and state directory. You can open, restart, disable, or remove each one separately.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/02-overview.png"><img src="docs/assets/panel/02-overview.png" alt="Project overview"></a>
+      <p><b>② Overview</b>: tabs follow the flow: Sources → Triggers → Evaluation → Execution. Tickets that need a human can be handled in place. A 24-hour funnel shows arrived, evaluated, and accepted counts, plus executor concurrency.</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/03-evaluate.png"><img src="docs/assets/panel/03-evaluate.png" alt="Evaluation"></a>
+      <p><b>③ Evaluation</b>: each trigger gets exactly one decision, with a traceable reason (for example, "an allowlisted person asked explicitly; the main Session accepted"). Rules live in Policy.</p>
+    </td>
+    <td width="50%" valign="top">
+      <a href="docs/assets/panel/04-execute.png"><img src="docs/assets/panel/04-execute.png" alt="Execution"></a>
+      <p><b>④ Execution</b>: each Ticket has its own Session and work directory. See executor status, filter by lifecycle, and follow each Ticket's stage (for example, waiting for a new trigger after CI, then waking) and human intervention points.</p>
+    </td>
+  </tr>
+</table>
+
 ## Quick start
 
 When DSH, a model provider, and this checkout are ready:
