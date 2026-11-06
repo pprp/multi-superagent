@@ -6,6 +6,14 @@
 >
 > 为公开做了适配，与内部版本及文章 *Exploring Super-agent Design: Towards a More Autonomous Agent System* 中的实现并不完全一致。文中部分设计属于后续方向，本原型尚未实现。上游单仓能力与缺陷请以官方仓库为准；本仓新增的多项目编排与隔离语义由本项目自行维护。
 
+## 架构一览
+
+<video src="docs/assets/multi-sa-demo.mp4" controls width="100%"></video>
+
+[multi-sa-demo.mp4](docs/assets/multi-sa-demo.mp4)
+
+架构解说：Multi-SA 是 DeepSeek Harness 上的多项目、强隔离、可并行 Superagent（研究原型）。
+
 ## 为什么做 Multi-SA
 
 官方 / 单仓 [dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) 面向**一个** GitHub 仓库：一套 Sources、一套 Policy、一套执行上下文。实际工作里往往要同时推多个仓库（论文仓、产品仓、实验仓……）；若为每个仓各起一整套 Superagent，运维成本高，也容易串配置。

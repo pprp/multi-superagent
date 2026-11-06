@@ -6,6 +6,14 @@
 >
 > We have adapted it for publication, so it is not identical to our internal version or the implementation described in *Exploring Super-agent Design: Towards a More Autonomous Agent System*. Some designs discussed in the article are directions for future development and are not implemented in this prototype. Treat the upstream repo as the source of truth for single-repo Superagent behavior; multi-project orchestration and isolation semantics here are maintained by this project.
 
+## Overview
+
+<video src="docs/assets/multi-sa-demo.mp4" controls width="100%"></video>
+
+[multi-sa-demo.mp4](docs/assets/multi-sa-demo.mp4)
+
+Architecture explainer for Multi-SA: multi-project, strongly isolated, parallel Superagent on DeepSeek Harness (research prototype).
+
 ## Why Multi-SA
 
 The official / single-repo [dsh-superagent-prototype](https://github.com/deepseek-ai/dsh-superagent-prototype) is built for **one** GitHub repository: one Sources setup, one Policy, one execution context. Day-to-day work often spans several repos at once (paper, product, experiments…). Spinning up a full Superagent per repo is heavy to operate and easy to misconfigure across instances.
