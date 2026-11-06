@@ -8,9 +8,7 @@
 
 ## Overview
 
-<video src="docs/assets/multi-sa-demo.mp4" controls width="100%"></video>
-
-[multi-sa-demo.mp4](docs/assets/multi-sa-demo.mp4)
+https://github.com/user-attachments/assets/1985790b-e8bb-4457-878e-0070fb652f6a
 
 Architecture explainer for Multi-SA: multi-project, strongly isolated, parallel Superagent on DeepSeek Harness (research prototype).
 
