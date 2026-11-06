@@ -8,9 +8,7 @@
 
 ## 架构一览
 
-<video src="docs/assets/multi-sa-demo.mp4" controls width="100%"></video>
-
-[multi-sa-demo.mp4](docs/assets/multi-sa-demo.mp4)
+https://github.com/user-attachments/assets/1985790b-e8bb-4457-878e-0070fb652f6a
 
 架构解说：Multi-SA 是 DeepSeek Harness 上的多项目、强隔离、可并行 Superagent（研究原型）。
 
